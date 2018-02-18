@@ -142,8 +142,7 @@ app.post('/',function(req,res){
 		console.log("aa"+JSON.stringify(req.body));
 	}
     sendTextMessage('1357968537622144',messageText);
-   // sendTextMessage(sender2,messageText);
-	res.sendStatus(200);
+    res.sendStatus(200);
 })
 
 
