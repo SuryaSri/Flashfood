@@ -13,8 +13,8 @@ var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
-var activelink ='https://e7c6f8e6.ngrok.io/';
-var recommendationLink = 'https://e7c6f8e6.ngrok.io/';
+var activelink ='https://332ce7c0.ngrok.io/';
+var recommendationLink = 'https://332ce7c0.ngrok.io';
 let token = 'EAAHdua7I9ZAsBAKyT44RgxnO5h6WzHulrG0TaukJQcIJ1Rl4PQyBo1zYLQt6g5rbGWLM8VuVqld94ESnxYKtQHnZClBcOyq0SRBPgK3u8kdHW5FHPmTKTJ9Oo5CXBXKRbsCMzxS4acD3PnAQTegGIwIq976cCapU0dZBwMBdAZDZD';
 
 
@@ -87,8 +87,14 @@ app.post('/', function (req, res) {
                                         }
                                         else if ("attachments" in event.message){
                                                 if (event.message.attachments[0].type=="location"){
-                                                        var link = activelink + event.sender.id + '/set_address/'+event.message.attachments[0].payload.coordinates.lat+','+event.message.attachments[0].payload.coordinates.long;
-                                                        callSendRedisAddress(link,event.sender.id);
+                                                        var link = activelink + event.sender.id + '/set_add/'+event.message.attachments[0].payload.coordinates.lat+','+event.message.attachments[0].payload.coordinates.long;
+                                                         var messageData = {
+                                                            ID: event.sender.id,
+                                                            lat: event.message.attachments[0].payload.coordinates.lat,
+                                                            long: event.message.attachments[0].payload.coordinates.long
+                                                        };
+                                                       // var link = activelink + sender + '/addUser/' + latval + ',' + longval;
+                                                        callPost("adress_option",event.sender.id,messageData,'addUser');
                                                 }
                                                 else
                                                 console.log("other attachment");
@@ -207,15 +213,40 @@ function receivedPostback(event) {
                             subscribed:1
                           };
                           console.log(messageData)
-                          callPost(sender, messageData)
+                          callPost("greeting",sender, messageData, "addUser")
                         break;
+                        case 'change_address'
                         default:
-                                console.log(payload);
-                              //  SpecialIntents(payload,sender);
+                                console.log("hgdhd"+payload);
+                                SpecialIntents(payload,sender);
                         break;
                 }
         }
 }
+
+  function SpecialIntents(payload, sender) {
+        let apiai = apiaiApp.textRequest(payload, {
+            sessionId: sender // use any arbitrary id
+        });
+        //sending response to facebook
+        apiai.on('response', (response) => {
+            console.log("dfds"+response.result.action);
+            if (response.result.action === "set.location") {
+                aiText = response.result.fulfillment.speech;
+                sendTextMessage(sender,aiText);
+               
+            }else if (response.result.action === "process.card") {
+                console.log(response.result);
+                aiText = response.result.fulfillment.speech;
+                sendTextMessage()
+            }
+        });
+        apiai.on('error', (error) => {
+            console.log(error);
+        });
+        apiai.end();
+    }
+
 
 //Api calls
 function callCondition(tags,sender,operation,aiText){
@@ -235,28 +266,101 @@ function callCondition(tags,sender,operation,aiText){
         sendButton(sender,["postback"],"Please Subscribe to get the best food in town at half the prices", ["SUBSCRIBE"],["SUBSCRIBE"],"tall")
       }
 
-      if(body.subscribed===1){
-          CustomQuickreply(sender,"fdfds",1);
+      if(body.subscribed===1 && body.location===1){
+          sendTextMessage(sender, "You've selected this address: "+body.decoded_address)
+          CustomQuickreply(sender,"fdfds",2);
+      }
+
+      if(body.subscribed===2){
+
       }
     }
 
   })
 }
 
-function callPost(sender, messageData){
+function callPost(tag,sender, messageData,callName){
+    console.log(messageData)
     request({
-      uri:activelink+'addUser',
+      uri:activelink + callName,
       method:'POST',
       json: messageData
     }, function(error, response, body){
-      if(error) throw err;
-      console.log("fefd"+response.body);
-      if(response.body==='200 OK'){
-        console.log("ewe");
-       // CustomQuickreply(sender,"put lcaotion",1);
+      if(error) throw error;
+      console.log("fefd"+JSON.stringify(response.body));
+      var result=(response.body);
+      if(tag==='greeting'){
+            if(result.subscribed===1 && result.location===0){
+                console.log("ewe");
+                CustomQuickreply(sender,"put location",1);
+           }
+
+            else if (result.subscribed===1 && result.location==1){
+            //dataRequest(sender, titles, images )
+            }
+      }
+
+      else if(tag==="adress_option"){
+        sendTextMessage(sender,"You've selected this address:" + result.decoded_address);
+        //CustomQuickreply(sender,"Select from the options",1)
+        sendButton(sender,["postback"],"Enter the Place adress, If any other particulars",["Change adress"],["change_address"],"tall");
       }
     })
 }
+
+ function callSendRedisAddress(operation, sender) {
+        request_1.getAsync({
+            url: operation,
+            method: 'GET'
+        }).then(function(res, err) {
+            var body = ''; // Will contain the final response
+            if (err) throw err;
+            //console.log(res.calls)
+            var response = JSON.parse(res.body)
+            console.log('vava' + res.body)
+            if(response.status==='shut_down'){
+                sendTextMessage(sender,"sorry, store near you is shut down")
+
+            }
+            if(response.status==='out_of_range'){
+                sendTextMessage(sender,"Sorry, we currently do not serve in your area")
+            }
+
+            else if(response.tags==='menu'){
+                 var link = "http://genii.ai/activebots/Babadadhaba" + "?userId=" + sender;
+                 sendButton(sender, ["web_url"], "what would to like to have?", [link], ["Show Menu!"], "tall");
+            }
+
+            else{
+            if (response.status === 'None')
+
+            {
+                sendTextMessage(sender, "We are sorry but we currently do not serve in your area. Please try again later.")
+            } else if (response.tags === 'New_user' || response.tags==='saved_address') {
+                console.log('fshkjsf')
+                aiText = "Thank you, How may I help you?"
+                var link = "http://genii.ai/activebots/Babadadhaba?userId=" + sender;
+                sendButton(sender, ["postback", "postback", "web_url"], aiText, ["Show_specials", "Recommend", link], ["Specials", "Recommendations", "Menu"], "tall");
+            } else if (response.tags === 'recommend' || response.tags === 'specials' || response.tags==='recommend_specific') {
+                var operation = response.calls
+                callrecommend(operation, sender)
+            } else if (response.calls) {
+                console.log(response.calls[0])
+                var operation = response.calls
+                var tag = response.tags
+                var text = 'Thanks! How may I help you?'
+                console.log(JSON.stringify(operation))
+
+                callSendRedisapi(tag, operation, sender, text)
+
+
+            }
+        }
+
+
+
+        });
+    }
 
 //functions
  function QuickReplyParser(sender, payload) {
@@ -284,15 +388,22 @@ function callPost(sender, messageData){
         } else if (payload === 'Confirm_yes') {
             CustomQuickreply(sender, "Please choose your delivery address");
         } else if (payload.search('Payment') >= 0) {
+            console.log("dasdads")
             var lat = payload.search('Lat:');
             var long = payload.search(', Long: ');
             var end = payload.search('}');
             var latval = payload.substring(lat + 4, long);
             var longval = payload.substring(long + 8, end);
-            var link = activelink + sender + '/set_address/' + latval + ',' + longval;
+            var messageData = {
+              ID: sender,
+              lat: latval,
+              long: longval
+            };
+            var link = activelink + sender + '/addUser/' + latval + ',' + longval;
+            callPost("adress_option",sender,messageData, 'addUser');
             console.log(link);
             console.log("Hi" + payload);
-            callSendRedisAddress(link, sender);
+           // callSendRedisAddress(link, sender);
             //callSendRedisapi("payment",sender,link,"How would you like to pay?");
         } else if (payload === "order_status") {
             console.log("dfghj");
