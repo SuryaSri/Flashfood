@@ -215,7 +215,7 @@ function receivedPostback(event) {
                           console.log(messageData)
                           callPost("greeting",sender, messageData, "addUser")
                         break;
-                        case 'change_address'
+                       // case 'change_address'
                         default:
                                 console.log("hgdhd"+payload);
                                 SpecialIntents(payload,sender);
