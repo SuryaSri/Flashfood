@@ -1,5 +1,3 @@
-/* Vaibhav Aggarwal 4 july,2017 */
-
 'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -7,15 +5,12 @@ const request = require('request');
 const path = require('path');
 const apiaiApp = require('apiai')('b5197f58ead44a4d8e542dd3cf3d717e');
 var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><body><h1>Facebook Messenger Bot</h1>This is a bot based on Messenger Platform QuickStart. For more details, see their <a href=\"https://developers.facebook.com/docs/messenger-platform/guides/quick-start\">docs</a>.<script src=\"https://button.glitch.me/button.js\" data-style=\"glitch\"></script><div class=\"glitchButton\" style=\"position:fixed;top:20px;right:20px;\"></div></body></html>";
-//var mongo = require('mongodb');
-//var MongoClient = require('mongodb').MongoClient;
-//var url = "mongodb://localhost:27017/mydb";
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
-var activelink ='https://332ce7c0.ngrok.io/';
-var recommendationLink = 'https://332ce7c0.ngrok.io';
-let token = 'EAAHdua7I9ZAsBAKyT44RgxnO5h6WzHulrG0TaukJQcIJ1Rl4PQyBo1zYLQt6g5rbGWLM8VuVqld94ESnxYKtQHnZClBcOyq0SRBPgK3u8kdHW5FHPmTKTJ9Oo5CXBXKRbsCMzxS4acD3PnAQTegGIwIq976cCapU0dZBwMBdAZDZD';
+var activelink ='https://cae0df22.ngrok.io/';
+var recommendationLink = 'https://cae0df22.ngrok.io/';
+let token = 'EAAEms8xEwDABAKZBnOcTDqtzJBBWTUuQLJXRRlcD16RiZCPaKbIy8ah4JcOwOUDGurvL4qqZBVdRaQZAlLIAkjQSaZCa4dTh7MeZBZAgfLpFstKgNfWtYSwjRUXCtd1vmIg5akomsvJ1ffUqYzkYMYuTiAz14KKvq5zAr0vk5ysAgZDZD';
 
 
 // The rest of the code implements the routes for our Express server.
@@ -143,6 +138,35 @@ function sendMessage(event){
             
           }
 
+          else if(response.result.action  === 'show.offer'){
+             console.log("dffdf");
+             var operation = activelink + "getOffers/" + sender;
+             callCondition("offers", sender, operation, "Here are the awesome offers for you!")
+          }
+          else if (response.result.action === "process_card.process_card-selectnumber") {
+                var dish = toTitleCase(response.result.parameters.dish) ;
+                var number = response.result.parameters.number;
+                var dict = {};
+                dict[dish] = number;
+                var myjson = JSON.stringify(dict);
+                var finalDict = "";
+                for (var i = 0; i < myjson.length; i++) {
+                    if (myjson[i] === ' ')
+                        finalDict += ' ';
+                    else
+                        finalDict += myjson[i];
+                }
+                finalDict = finalDict;
+                var add = 'claimoffer/' + sender  ;
+                var final = activelink + add;
+
+                console.log(add);
+                var reply = response.result.fulfillment.speech;
+                //var reply="A "+ payload + " has been added";
+             //dfds   callSendRedisapi('add', final, sender, reply);
+                callPost("add", sender, finalDict, "claimOffer/" + sender)
+              }
+
 
 
         });
@@ -216,6 +240,14 @@ function receivedPostback(event) {
                           callPost("greeting",sender, messageData, "addUser")
                         break;
                        // case 'change_address'
+                       case 'getOffers':
+                              var operation = activelink + "getOffers/" + sender;
+                              callCondition("offers", sender, operation, "Here are the awesome offers for you!")
+                        break;
+                        case "showCart":
+                              var operation = activelink + 'showCart/' + sender;
+                              callCondition("showcart", sender, operation, "Here is your cart!")
+
                         default:
                                 console.log("hgdhd"+payload);
                                 SpecialIntents(payload,sender);
@@ -238,8 +270,9 @@ function receivedPostback(event) {
             }else if (response.result.action === "process.card") {
                 console.log(response.result);
                 aiText = response.result.fulfillment.speech;
-                sendTextMessage()
+                sendTextMessage(sender, aiText)
             }
+
         });
         apiai.on('error', (error) => {
             console.log(error);
@@ -247,18 +280,25 @@ function receivedPostback(event) {
         apiai.end();
     }
 
+  function toTitleCase(str) {
+        return str.replace(/\w\S*/g, function(txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        });
+    }
+
 
 //Api calls
 function callCondition(tags,sender,operation,aiText){
-  console.log(operation)
+  console.log(operation + tags)
   request_1.getAsync({
     url:operation,
     method:'GET'
   }).then(function(res, err){
-    var body=JSON.parse(res.body);
+    var body=(res.body);
     console.log(res.body);
     if(err) throw err;
-    if(tags="user_status"){
+    if(tags==="user_status"){
+      body=JSON.parse(body);
       if(body.subscribed===0){
 
 
@@ -268,19 +308,61 @@ function callCondition(tags,sender,operation,aiText){
 
       if(body.subscribed===1 && body.location===1){
           sendTextMessage(sender, "You've selected this address: "+body.decoded_address)
-          CustomQuickreply(sender,"fdfds",2);
+         // CustomQuickreply(sender,"fdfds",2);
+          var operation = activelink + "getOffers/" + sender;
+          callCondition("offers", sender, operation, "Here are the awesome offers for you!")
       }
 
-      if(body.subscribed===2){
-
-      }
     }
+
+      else if(tags==="offers"){
+         //console.log("offers response"+res.body);
+         body=JSON.parse(body);
+        // console.log(body);
+         var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
+         for(var i=0; i<body.length; i++){
+              dish.push(body[i]["dish"] + " - Rs. " + body[i]["offerPrice"]);
+              link.push(body[i]["link"])
+              //ferPrice.push(body[i]["offerPrice"])
+              originalPrice.push(body[i]["originalPrice"])
+              restName.push(body[i]["restName"]);
+         }
+         console.log(dish);
+         console.log(originalPrice);
+         console.log(restName)
+         dataRequest(sender, dish, link, originalPrice, restName);
+
+      }
+
+      else if(tags === "showcart"){
+        body = JSON.parse(body);
+        console.log(body.length)
+       // for(var key in body){
+          //console.log("sss")
+          var c ="";
+          if(body['cart']==="Yes"){
+           // console.log(body['status'])
+            if(body['status'][0]==="Yes"){
+              console.log(body['dish'])
+              for(var i=0; i<body['dish'].length; i++){
+                console.log(body['dish'][i])
+                c += '('+ body['dish'][i]+')'+' x '+ body['qty'][i]+"\n";
+              }
+              console.log(c)
+
+            }  
+          }
+         // console.log(key);
+        //}
+
+        console.log("fdskhd");
+      }
 
   })
 }
 
 function callPost(tag,sender, messageData,callName){
-    console.log(messageData)
+    console.log(messageData + tag)
     request({
       uri:activelink + callName,
       method:'POST',
@@ -296,14 +378,30 @@ function callPost(tag,sender, messageData,callName){
            }
 
             else if (result.subscribed===1 && result.location==1){
+              sendTextMessage(sender, "You have selected " + response.decoded_address + " as your address.")
             //dataRequest(sender, titles, images )
             }
       }
 
       else if(tag==="adress_option"){
         sendTextMessage(sender,"You've selected this address:" + result.decoded_address);
+         var operation = activelink + "getOffers/" + sender;
+          callCondition("offers", sender, operation, "Here are the awesome offers for you!")
         //CustomQuickreply(sender,"Select from the options",1)
-        sendButton(sender,["postback"],"Enter the Place adress, If any other particulars",["Change adress"],["change_address"],"tall");
+       // sendButton(sender,["postback"],"Enter the Place adress, If any other particulars",["Change adress"],["change_address"],"tall");
+      }
+
+      else if(tag==="add"){
+        console.log(result.status)
+        if(result.status=='Yes'){
+          console.log("jkj")
+          var message = "Your dish " + result.dish + " has been added."
+          sendButton(sender,["postback","postback"],message,["getOffers","showCart"],["More Offers", "Show Cart"],"tall");
+        }
+        else if(result.status=="No"){
+          sendTextMessage(sender, "We have " + result.remaining + " of " + result.dish + " remaining.")
+        }
+        console.log("dschuijd")
       }
     })
 }
@@ -458,6 +556,7 @@ function callPost(tag,sender, messageData,callName){
             }
         }
             else if(payload==='set_saved_address'){
+                console.log("saved adress1")
                 var link=activelink+'use_saved/'+sender
                 callSendRedisAddress(link,sender)
             }
@@ -566,55 +665,59 @@ function sendButton(recipientId,type,text,payload,caption,size){
         callSendAPI(messageData);
 }
 
-function dataRequest(recipientId,titles,images,offerId){
-  var title=titles;
-  var imageurl=images;//put default image
-  var offerId = offerId;
-  var cards =new Array(title.length);
-  var string;
-  var i;
-  for(var j=0;j<titles.length;j++){
-          title[j] = toTitleCase(titles[j].replace(/_/g, ' '));
-  }
-  for(i=0;i<title.length;i++){
-          string=makeJson(title[i],imageurl,offerId[i]);
-          cards[i]=string;
-  }
-  console.log(cards);
-  var messageData = {
-          recipient :{
-                  id: recipientId
-          },
-          message: {
-                  attachment: {
-                          type: "template",
-                          payload: {
-                                  template_type: "list",
-                                  elements:cards
-                          }
-                  }
-          }
-  };
-  //console.log(messageData);
-  // console.log(messageData.message.attachment.payload);
-  callSendAPI(messageData);
-}
-function makeJson(title,imageurl){
-      //  var title1=title.substring(0,title.indexOf(" - Rs."));
-        var elements={
-                title: title,
-                image_url:imageurl,
-                buttons: [
-                        {
-                                type: "postback",
-                                title: "Buy ",
-                                payload: "Buy.Accompaniments:" + offerId
-                        }
-                ],
+
+    function dataRequest(recipientId, titles, images, originalPrice, restName) {
+        var title = titles;
+        var imageurl = images;
+        var cards = new Array(title.length);
+        var string;
+        var i;
+        for (var j = 0; j < titles.length; j++) {
+            title[j] = toTitleCase(titles[j].replace(/_/g, ' '));
         }
+        for (i = 0; i < title.length; i++) {
+            string = makeJson(title[i], imageurl[i], originalPrice[i], restName[i]);
+            cards[i] = string;
+        }
+        console.log(cards);
+        var messageData = {
+            recipient: {
+                id: recipientId
+            },
+            message: {
+                attachment: {
+                    type: "template",
+                    payload: {
+                        template_type: "generic",
+                        elements: cards
+                    }
+                }
+            }
+        };
+        //console.log(messageData);
+        // console.log(messageData.message.attachment.payload);
+        callSendAPI(messageData);
+    }
+  //console.log(messageData);
+  // console.log(messageData.message.attachment.payload);}
+
+function makeJson(title, imageurl, oPrice, rName) {
+        var title1 = title.substring(0, title.indexOf(" - Rs."));
+        var elements = {
+            title: title,
+            image_url: imageurl,
+            subtitle: "Original Price:Rs " +oPrice + "\n" + rName,
+            buttons: [{
+                type: "postback",
+                title: "Buy " + title1,
+
+                payload: "dish.buying:" + title1
+            }],
+        }
+        console.log(title1)
         console.log(title);
         return elements;
-}
+    }
 
 function sendTextMessage(recipientId, messageText) {
         var messageData = {
@@ -690,6 +793,6 @@ function callSendAPI(messageData) {
 // Set Express to listen out for HTTP requests
 
 
-var server = app.listen(process.env.PORT || 3000, function () {
+var server = app.listen(process.env.PORT || 5000, function () {
         console.log("Listening on port %s", server.address().port);
 });
