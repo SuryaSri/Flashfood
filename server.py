@@ -236,6 +236,8 @@ def claimOffer(sender):
         cart = redDict(redis = pot_con, key = "user:"+sender+":cart:1")
         user['confirmed_carts'] = 0
     for item in body:
+        print(item)
+        print(OffersDB[OffersDB['dish']==item])
         if(OffersDB[OffersDB['dish']==item]['qty_left'].tolist()[0]>=int(body[item])):
             cart[item] = body[item]
             result['dish'].append(item)
@@ -258,7 +260,7 @@ def showcart(sender):
     else:
         cart = redDict(redis = pot_con, key = "user:"+sender+":cart:1")
         user['confirmed_carts'] = 0
-    result = {'cart':'','status':[],'qty':[],'dish':[],'remaining':[]}
+    result = {'cart':'','status':[],'qty':[],'dish':[],'remaining':[],'price':[]}
     #print(result)
     if(len(cart)!=0):
         #print(cart)
@@ -268,15 +270,19 @@ def showcart(sender):
                 result['dish'].append(item)
                 result['qty'].append(int(cart[item]))
                 result['status'].append('Yes')
+                result['price'].append(OffersDB[OffersDB['dish']==item]['offerPrice'].tolist()[0])
                 result['remaining'].append(OffersDB[OffersDB['dish']==item]['qty_left'].tolist()[0])
             else:
                 result['dish'].append(item)
                 result['qty'].append(int(cart[item]))
                 result['status'].append('No')
+                result['price'].append(OffersDB[OffersDB['dish']==item]['offerPrice'].tolist()[0])
                 result['remaining'].append(OffersDB[OffersDB['dish']==item]['qty_left'].tolist()[0])
+        print(result)
         yield json.dumps(result)
     else:
         result['cart'] = 'No'
+        print(result)
         yield json.dumps(result)
 
 '''
