@@ -3,7 +3,7 @@ const express = require('express');
 const request = require('request');
 const path = require('path');
 const notifier = require('node-notifier');
-const path = require('path');
+//const path = require('path');
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
@@ -142,7 +142,7 @@ app.post('/',function(req,res){
 	else {
 		console.log("aa"+JSON.stringify(req.body));
 	}
-    sendTextMessage('1357968537622144',messageText);
+    //sendTextMessage('1357968537622144',messageText);
    // sendTextMessage(sender2,messageText);
 	res.sendStatus(200);
 })
