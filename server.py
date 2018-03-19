@@ -3,6 +3,7 @@ import json
 import googlemaps
 import random
 import pandas as pd
+from geopy.distance import vincenty
 from bottle import get, post, request, run, install, response , route
 from gevent import monkey; monkey.patch_all()
 from redis import Redis as red
@@ -197,10 +198,13 @@ Offers
 '''
 global OffersDB
 OffersDB = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
+global offerRests
+offerRests = []
+
 
 @post('/addOffers')
 def addOffer():
-    global OffersDB
+    global OffersDB,offerRests
     Offers = []
     body = request.json
     for i in range(len(body['data'])):
@@ -210,15 +214,75 @@ def addOffer():
         body['data'][i]['restName'] = rest['name']
         body['data'][i]['link'] = 'http://genii.ai/activebots/Babadadhaba/img/db/' + body['data'][i]['dish'].replace(" ","-") + ".jpg"
         Offers.append(body['data'][i])
+        if(body['data'][i]['restID'] not in offerRests):
+            offerRests.append(body['data'][i]['restID'])
     DB = pd.read_json(json.dumps(Offers),orient='records')
     OffersDB = OffersDB.append(DB, ignore_index = True)
+
+def getnearestRest(sender):
+    global offerRests
+    user = redDict(redis = pot_con, key = "user:" + str(sender) + ":details")
+    if('lat' and 'long' in user):
+        lat = user['lat']
+        lon = user['long']
+    else:
+        return []
+    nearest = {}
+    for rest in offerRests:
+        restaurant = redDict(redis = pot_arc, key = "rest:" + str(rest) + ":details")
+        if('lat' and 'long' in restaurant):
+            distance = vincenty((lat,lon), (restaurant['lat'],restaurant['long'])).km
+            if(distance <= restaurant['radius']):
+                nearest[restaurant['name']] = distance
+    result = []
+    for key in sorted(nearest, key=lambda x: nearest[x]):
+        result.append(key)
+    print(result)
+    print("surya")
+    return result
 
 @get('/getOffers/<sender>')
 def showoffers(sender):
     global OffersDB
-    df = OffersDB.copy(deep = True)
-    df.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
-    yield df.to_json(orient = 'records')
+    restaurants = getnearestRest(sender)
+    print(restaurants)
+    print(OffersDB['restName'])
+    print(OffersDB)
+    newdf = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
+    for rest in restaurants:
+        db = OffersDB[OffersDB['restName']==rest]
+        print(db)
+        if(len(db)!=0):
+            newdf.append(db,ignore_index = True)
+    newdf.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
+    print((newdf.head(n=10)).to_json(orient = 'records'))
+    yield (newdf.head(n=10)).to_json(orient = 'records')
+
+@get('/showPopulars/<sender>')
+def showPopular(sender):
+    global OffersDB
+    restaurants = getnearestRest(sender)
+    print(restaurants)
+    newdf = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
+    for rest in restaurants:
+        newdf.append(OffersDB[OffersDB['restName']==rest],ignore_index = True)
+    sortedb = newdf.sort_values(['qty_sold',],ascending=False)
+    sortedb.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
+    print((sortedb.head(n=10)).to_json(orient = 'records'))
+    yield (sortedb.head(n=10)).to_json(orient = 'records')
+
+@get('/cheapOffers/<sender>')
+def showCheap(sender):
+    global OffersDB
+    restaurants = getnearestRest(sender)
+    print(restaurants)
+    newdf = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
+    for rest in restaurants:
+        newdf.append(OffersDB[OffersDB['restName']==rest],ignore_index = True)
+    sortedb = OffersDB.sort_values(['offerPrice'],ascending=True)
+    sortedb.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
+    print((sortedb.head(n=10)).to_json(orient = 'records'))
+    yield (sortedb.head(n=10)).to_json(orient = 'records')
 
 @post('/claimOffer/<sender>')
 def claimOffer(sender):
@@ -228,12 +292,12 @@ def claimOffer(sender):
     body = request.json
     body = str(body)
     body = json.loads(body)
-    key = "user:"+ sender + ":details"
-    user = redDict(redis = pot_arc, key = key)
+    key = "user:"+ str(sender) + ":details"
+    user = redDict(redis = pot_con, key = key)
     if('confirmed_carts' in user):
-        cart = redDict(redis = pot_con, key = "user:"+sender+":cart:"+str(user['confirmed_carts']+1))
+        cart = redDict(redis = pot_con, key = "user:"+str(sender)+":cart:"+str(user['confirmed_carts']+1))
     else:
-        cart = redDict(redis = pot_con, key = "user:"+sender+":cart:1")
+        cart = redDict(redis = pot_con, key = "user:"+str(sender)+":cart:1")
         user['confirmed_carts'] = 0
     for item in body:
         print(item)
@@ -253,17 +317,14 @@ def claimOffer(sender):
 @get('/showCart/<sender>')
 def showcart(sender):
     global OffersDB
-    #print(OffersDB)
-    user = redDict(redis = pot_arc, key = "user:" + sender + ":details")
+    user = redDict(redis = pot_con, key = "user:" + str(sender) + ":details")
     if('confirmed_carts' in user):
-        cart = redDict(redis = pot_con, key = "user:"+sender+":cart:"+str(user['confirmed_carts']+1))
+        cart = redDict(redis = pot_con, key = "user:"+str(sender)+":cart:"+str(user['confirmed_carts']+1))
     else:
-        cart = redDict(redis = pot_con, key = "user:"+sender+":cart:1")
+        cart = redDict(redis = pot_con, key = "user:"+str(sender)+":cart:1")
         user['confirmed_carts'] = 0
     result = {'cart':'','status':[],'qty':[],'dish':[],'remaining':[],'price':[]}
-    #print(result)
     if(len(cart)!=0):
-        #print(cart)
         result['cart'] = 'Yes'
         for item in cart:
             if((OffersDB[OffersDB['dish']==item]['qty_left'].tolist()[0])>=(int(cart[item]))):
@@ -284,7 +345,66 @@ def showcart(sender):
         result['cart'] = 'No'
         print(result)
         yield json.dumps(result)
+#qty-dish,price, name, number
+def showCart1(sender):
+    global OffersDB
+    user = redDict(redis = pot_con, key = "user:" + str(sender) + ":details")
+    if('confirmed_carts' in user):
+        cart = redDict(redis = pot_con, key = "user:"+str(sender)+":cart:"+str(user['confirmed_carts']+1))
+    else:
+        cart = redDict(redis = pot_con, key = "user:"+str(sender)+":cart:1")
+        user['confirmed_carts'] = 0
+    result = {'cart':'','status':[],'qty':[],'dish':[],'remaining':[],'price':[]}
+    if(len(cart)!=0):
+        result['cart'] = 'Yes'
+        for item in cart:
+            if((OffersDB[OffersDB['dish']==item]['qty_left'].tolist()[0])>=(int(cart[item]))):
+                result['dish'].append(item)
+                result['qty'].append(int(cart[item]))
+                result['status'].append('Yes')
+                result['price'].append(OffersDB[OffersDB['dish']==item]['offerPrice'].tolist()[0])
+                result['remaining'].append(OffersDB[OffersDB['dish']==item]['qty_left'].tolist()[0])
+            else:
+                result['dish'].append(item)
+                result['qty'].append(int(cart[item]))
+                result['status'].append('No')
+                result['price'].append(OffersDB[OffersDB['dish']==item]['offerPrice'].tolist()[0])
+                result['remaining'].append(OffersDB[OffersDB['dish']==item]['qty_left'].tolist()[0])
+        print(result)
+        return (result)
+    else:
+        result['cart'] = 'No'
+        print(result)
+        return (result)
 
+
+@get('/confirm/<sender>/<number>')
+def confirmCart(sender,number):
+    global OffersDB
+    cart = showCart1(sender)
+    result = {'name':'','number':'','total':0,'cart':{}}
+    print(cart)
+    resultcart = {}
+    if(cart['cart']=='No'):
+        return json.dumps(result)
+    else:
+        total = 0
+        for i in range(len(cart['dish'])):
+            if(cart['status'][i]=='No'):
+                cart['cart'] = 'No'
+                return json.dumps(result)
+            total += int(cart['price'][i]) * int(cart['qty'][i])
+    user = redDict(redis = pot_con, key = "user:" + str(sender) + ":details")
+    user['number'] = number
+    if('confirmed_carts' in user):
+        user['confirmed_carts'] = int(user['confirmed_carts']) + 1
+    else:
+        user['confirmed_carts'] = 1
+    result['name'] = user['name']
+    result['number'] = user['number']
+    result['total'] = total
+    result['cart'] = cart
+    return json.dumps(result)
 '''
 Orders
 -orderId
