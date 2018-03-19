@@ -5,13 +5,13 @@ def do_login():
     print(username,type(username))
     print (username['id'])
     return username
-r = requests.get(url="http://0.0.0.0:3000/getUser/1234567890",headers=head)
+r = requests.get(url="http://0.0.0.0:5000/getUser/1234567890",headers=head)
 res = r.json()
 if(res['name']==''):
     dta = {'ID': 1234567890, 'name': 'surya'}
 print ("surya",r.text)
 data = {'ID':1234567890, 'name':'surya','subscribed':1 }
-r1 = requests.post(url='http://0.0.0.0:3000/addUser',data = json.dumps(data),headers=head)
+r1 = requests.post(url='http://0.0.0.0:5000/addUser',data = json.dumps(data),headers=head)
 data = r2.json()
 print (data)
 print(r2.status_code)
@@ -24,7 +24,7 @@ data = {"name":"New Punjabi Food Corner",
 "lat":12.844706,
 "long":77.665583,
 "radius":5}
-r = requests.post(url="http://0.0.0.0:3000/addrest",data = json.dumps(data),headers=head)
+r = requests.post(url="http://0.0.0.0:5000/addrest",data = json.dumps(data),headers=head)
 '''
 
 import requests
@@ -35,4 +35,4 @@ data = {"data":[{"restID":2,"qty_left":10,"qty_sold":0,"dish":"Chilly Chicken","
 {"restID":2,"qty_left":6,"qty_sold":0,"dish":"Andhra Chicken","originalPrice":130,"offerPrice":100,"type":"Starters[Non-Veg]"},
 {"restID":2,"qty_left":4,"qty_sold":0,"dish":"Chicken Biryani","originalPrice":130,"offerPrice":80,"type":"Biryani"},
 {"restID":2,"qty_left":8,"qty_sold":0,"dish":"Mutton Biryani","originalPrice":170,"offerPrice":100,"type":"Biryani"}]}
-r = requests.post(url="http://0.0.0.0:3000/addOffers",data = json.dumps(data),headers=head)
+r = requests.post(url="https://485fb9df.ngrok.io/addOffers",data = json.dumps(data),headers=head)
