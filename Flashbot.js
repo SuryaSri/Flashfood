@@ -8,8 +8,8 @@ var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
-var activelink ='https://e61e5ead.ngrok.io/';
-var recommendationLink = 'https://e61e5ead.ngrok.io/';
+var activelink ='https://1dbf2a54.ngrok.io/';
+var recommendationLink = 'https://1dbf2a54.ngrok.io/';
 let token = 'EAAHdua7I9ZAsBAOyIhP5vyDAxWzjQjX7OsRYogfA4tgI8ZA5JO84IjUV8glnio1ZAT4nPvAu2uscAu4NcSHoAgIUQWnDXldwyhEro7jlfjtAZABnu1epU9pZBZAZCGPVFp1cUdoWk1GOZA743blIrwbCVGjwclpFUnGaG6tW79GcSgZDZD';
 
 
@@ -470,32 +470,132 @@ function callCondition(tags,sender,operation,aiText){
 
       //confirm
       else if(tags === "confirm"){
-        body = JSON.parse(body)
+        var b= JSON.parse(body)
         console.log(body.length)
-        console.log(body)
+        console.log(b['body'])
+        body = b['body']
 
         var dish = []
         var qty = []
         var price = []
         if(body['cart']==="Yes"){
-           // console.log(body['status'])
+           console.log(body['status'])
             if(body['status'][0]==="Yes"){
               console.log(body['dish'])
               for(var i=0; i<body['dish'].length; i++){
                 console.log(body['dish'][i])
-                dish.add(body['dish'][i])
-                qty.add(body['qty'][i])
-                price.add(body['price'][i])
+                dish.push(body['dish'][i])
+                qty.push(body['qty'][i])
+                price.push(body['price'][i])
                 
               }
               
+            }
+
+            else{
 
             }
-        }
 
+            console.log(dish)
+            console.log(qty)
+            console.log(price)
+            console.log(b['total'])
+            console.log(b['name'])
+            console.log(b['number'])
+
+          }
+
+          sendReciept(sender, b['total'], b['name'], b['total'], dish, qty, price, "ddress", b['name'], b['number'])
       }
 
   })
+}
+
+function sendReciept(recipientID,newdiscount,name,total,titles,quantity,price,address,Name,Num){
+        var cards =new Array(titles.length);
+        var string;
+        var i;
+        for(var j=0;j<titles.length;j++){
+                titles[j] = toTitleCase(titles[j].replace(/_/g, ' '));
+        }
+        for(i=0;i<titles.length;i++){
+                string=makeJsonreceipt(titles[i],quantity[i],price[i]);
+                cards[i]=string;
+        }
+        var messageData={
+                "recipient":{
+                        id:recipientID
+                        },
+                message:{
+                        attachment:{
+                                type:"template",
+                                payload:{
+                                    
+                                        template_type:"receipt",
+                                        recipient_name:Name,
+                                        order_number:recipientID,
+                                        currency:"INR",
+                                        payment_method:"Cash on Delievery",
+                                        order_url:"http://babadadhaba.co/",
+                                        timestamp:"1428444852",
+                                        elements:cards,
+                                        address:{
+                                                street_1:address,
+                                                street_2:"",
+                                                city:"Phone Number",
+                                                postal_code:Num,
+                                                state:" : ",
+                                                country:" India "
+                                        },
+                                        summary:{
+                                                subtotal:total,
+                                                shipping_cost:0.00,
+                                                total_tax:0.00,
+                                                total_cost: total
+                                        },
+                                        adjustments:[
+                                                {
+                                                        name:"New Customer Discount",
+                                                        amount:newdiscount
+                                                },
+                                                {
+                                                        name:"10 Off Coupon",
+                                                        amount:10
+                                                }
+                                        ]
+                                }
+                        }
+                }
+        };
+        callSendAPI(messageData);
+}
+
+function makeJsonreceipt(title,quantity,price){
+        var elements={
+                title: title,
+                quantity : quantity,
+                price : price,
+                currency:"INR",
+                image_url:"http://assets.limetray.com/assets/user_images/logos/original/Logos_1464774908.png"
+                }
+        return elements;
+}
+
+function makeJson(title,imageurl){
+        var title1=title.substring(0,title.indexOf(" - Rs."));
+        var elements={
+                title: title,
+                image_url:imageurl,
+                buttons: [
+                        {
+                                type: "postback",
+                                title: "Buy "+ title1,
+                                payload: "dish.buying:" + title1
+                        }
+                ],
+        }
+        console.log(title);
+        return elements;
 }
 
 function callPost(tag,sender, messageData,callName){
