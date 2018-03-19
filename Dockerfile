@@ -1,15 +1,16 @@
-FROM ubuntu:latest
-
-FROM python:3.5-jessie
+FROM node:carbon
 
 WORKDIR /Flashfood
 
 ADD . /Flashfood
 
-RUN pip install -r requirements.txt
+RUN npm install express
+RUN npm install request
+RUN npm install apiai
+RUN npm install bluebird
 
-EXPOSE 3000
+EXPOSE 5000
 
-ENV NAME wrapper
+ENV NAME node-sever
 
-CMD ["python","server.py"]
+CMD ["node","Flashbot.js"]

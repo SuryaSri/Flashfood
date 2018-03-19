@@ -50,7 +50,7 @@ def byte2float(strung):
 	return float(byte2string(strung))
 
 def get_geocode(lat,longi):
-    gmaps = googlemaps.Client(key='AIzaSyBKtTB8dxqymBPAnsfAr5sPWv-UTAWGZtY')
+    gmaps = googlemaps.Client(key='AIzaSyCGIi0Ts6EavD1FN4Ckx0uR7Ikr1Z1Jwgw')
     reverse_geocode_result = gmaps.reverse_geocode((lat,longi))
     print(reverse_geocode_result[0]['formatted_address'])
     return reverse_geocode_result[0]['formatted_address']
@@ -382,7 +382,7 @@ def showCart1(sender):
 def confirmCart(sender,number):
     global OffersDB
     cart = showCart1(sender)
-    result = {'name':'','number':'','total':0,'cart':{}}
+    result = {'name':'','number':'','address':'','total':0,'body':{}}
     print(cart)
     resultcart = {}
     if(cart['cart']=='No'):
@@ -396,15 +396,17 @@ def confirmCart(sender,number):
             total += int(cart['price'][i]) * int(cart['qty'][i])
     user = redDict(redis = pot_con, key = "user:" + str(sender) + ":details")
     user['number'] = number
-    if('confirmed_carts' in user):
+    '''if('confirmed_carts' in user):
         user['confirmed_carts'] = int(user['confirmed_carts']) + 1
     else:
-        user['confirmed_carts'] = 1
+        user['confirmed_carts'] = 1'''
     result['name'] = user['name']
     result['number'] = user['number']
     result['total'] = total
-    result['cart'] = cart
+    result['body'] = cart
+    result['address'] = user['decoded_address']
     return json.dumps(result)
+
 '''
 Orders
 -orderId
@@ -416,4 +418,4 @@ Orders
 -delivery boi
 '''
 install(EnableCors())
-run(host='0.0.0.0', port=5000, debug=True, server='gevent')
+run(host='0.0.0.0', port=4000, debug=True, server='gevent')
