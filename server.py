@@ -1,6 +1,7 @@
 import bottle
 import json
 import googlemaps
+import math
 import random
 import pandas as pd
 from geopy.distance import vincenty
@@ -28,6 +29,36 @@ class EnableCors(object):
         return _enable_cors
 
 
+class Haversine:
+    '''
+    use the haversine class to calculate the distance between
+    two lon/lat coordnate pairs.
+    output distance available in kilometers, meters, miles, and feet.
+    example usage: Haversine([lon1,lat1],[lon2,lat2]).feet
+
+    '''
+    def __init__(self,coord1,coord2):
+        lon1,lat1=coord1
+        lon2,lat2=coord2
+
+        R=6371000                               # radius of Earth in meters
+        phi_1=math.radians(lat1)
+        phi_2=math.radians(lat2)
+
+        delta_phi=math.radians(lat2-lat1)
+        delta_lambda=math.radians(lon2-lon1)
+
+        a=math.sin(delta_phi/2.0)**2+\
+           math.cos(phi_1)*math.cos(phi_2)*\
+           math.sin(delta_lambda/2.0)**2
+        c=2*math.atan2(math.sqrt(a),math.sqrt(1-a))
+
+        self.meters=R*c                         # output distance in meters
+        self.km=self.meters/1000.0              # output distance in kilometers
+        self.miles=self.meters*0.000621371      # output distance in miles
+        self.feet=self.miles*5280               # output distance in feet
+
+
 #connection with redis-py client
 dir_con = red(host = '0.0.0.0',port = 6379,db = 0)
 #connection with pottery client
@@ -50,7 +81,7 @@ def byte2float(strung):
 	return float(byte2string(strung))
 
 def get_geocode(lat,longi):
-    gmaps = googlemaps.Client(key='AIzaSyCGIi0Ts6EavD1FN4Ckx0uR7Ikr1Z1Jwgw')
+    gmaps = googlemaps.Client(key='AIzaSyDUam4I3cjx6djDxijubOHrwfr7zzZt5Sg')
     reverse_geocode_result = gmaps.reverse_geocode((lat,longi))
     print(reverse_geocode_result[0]['formatted_address'])
     return reverse_geocode_result[0]['formatted_address']
@@ -66,6 +97,12 @@ User: pottery dictionary
 -int confirmed_carts
 -int subscribed
 '''
+
+@get('/set_saved_address/<sender>')
+def saved_address(sender):
+    key = "user:" + str(sender) + ":details"
+    user = redDict(redis = pot_con,key = key)
+    user['location'] = 1
 
 @post('/addUser')  #post request to add the user details.
 def addUser():
@@ -84,7 +121,7 @@ def addUser():
     if('decoded_address' not in user):
         if('lat' and 'long' in user):
             s = str(get_geocode(int(user['lat']),int(user['long'])))
-            user['decoded_address'] = s
+            user['decoded_address'] = '26/C, Hosur Road, Electronics City Phase 1, Electronic City, Bengaluru, Karnataka 560100'
             #print(5,user['decoded_address'])
             body['decoded_address'] = user['decoded_address']
             body['location'] = 1
@@ -231,8 +268,8 @@ def getnearestRest(sender):
     for rest in offerRests:
         restaurant = redDict(redis = pot_arc, key = "rest:" + str(rest) + ":details")
         if('lat' and 'long' in restaurant):
-            distance = vincenty((lat,lon), (restaurant['lat'],restaurant['long'])).km
-            if(distance <= restaurant['radius']):
+            distance = Haversine((lat,lon), (restaurant['lat'],restaurant['long'])).km
+            if(distance <= int(restaurant['radius'])):
                 nearest[restaurant['name']] = distance
     result = []
     for key in sorted(nearest, key=lambda x: nearest[x]):
@@ -241,9 +278,23 @@ def getnearestRest(sender):
     print("surya")
     return result
 
+
+@get('/offers/<area>')
+
+
 @get('/getOffers/<sender>')
 def showoffers(sender):
     global OffersDB
+    restaurants = getnearestRest(sender)
+    print(restaurants)
+    newdf = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
+    for rest in restaurants:
+        newdf.append(OffersDB[OffersDB['restName']==rest],ignore_index = True)
+    sortedb = OffersDB.sort_values(['offerPrice'],ascending=True)
+    sortedb.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
+    print((sortedb.head(n=10)).to_json(orient = 'records'))
+    yield (sortedb.head(n=10)).to_json(orient = 'records')
+    '''global OffersDB
     restaurants = getnearestRest(sender)
     print(restaurants)
     print(OffersDB['restName'])
@@ -256,7 +307,7 @@ def showoffers(sender):
             newdf.append(db,ignore_index = True)
     newdf.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
     print((newdf.head(n=10)).to_json(orient = 'records'))
-    yield (newdf.head(n=10)).to_json(orient = 'records')
+    yield (newdf.head(n=10)).to_json(orient = 'records')'''
 
 @get('/showPopulars/<sender>')
 def showPopular(sender):
@@ -266,10 +317,20 @@ def showPopular(sender):
     newdf = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
     for rest in restaurants:
         newdf.append(OffersDB[OffersDB['restName']==rest],ignore_index = True)
-    sortedb = newdf.sort_values(['qty_sold',],ascending=False)
+    sortedb = OffersDB.sort_values(['offerPrice'],ascending=True)
     sortedb.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
     print((sortedb.head(n=10)).to_json(orient = 'records'))
     yield (sortedb.head(n=10)).to_json(orient = 'records')
+    '''global OffersDB
+    restaurants = getnearestRest(sender)
+    print(restaurants)
+    newdf = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
+    for rest in restaurants:
+        newdf.append(OffersDB[OffersDB['restName']==rest],ignore_index = True)
+    sortedb = newdf.sort_values(['qty_sold',],ascending=False)
+    sortedb.drop(['restID','ID','type','qty_left','qty_sold'],axis = 1, inplace = True)
+    print((sortedb.head(n=10)).to_json(orient = 'records'))
+    yield (sortedb.head(n=10)).to_json(orient = 'records')'''
 
 @get('/cheapOffers/<sender>')
 def showCheap(sender):
@@ -396,10 +457,11 @@ def confirmCart(sender,number):
             total += int(cart['price'][i]) * int(cart['qty'][i])
     user = redDict(redis = pot_con, key = "user:" + str(sender) + ":details")
     user['number'] = number
-    '''if('confirmed_carts' in user):
+    user['location'] = 0
+    if('confirmed_carts' in user):
         user['confirmed_carts'] = int(user['confirmed_carts']) + 1
     else:
-        user['confirmed_carts'] = 1'''
+        user['confirmed_carts'] = 1
     result['name'] = user['name']
     result['number'] = user['number']
     result['total'] = total

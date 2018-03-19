@@ -30,9 +30,12 @@ r = requests.post(url="http://0.0.0.0:5000/addrest",data = json.dumps(data),head
 import requests
 import json
 head = {'Content-Type': 'application/json'}
-data = {"data":[{"restID":2,"qty_left":10,"qty_sold":0,"dish":"Chilly Chicken","originalPrice":120,"offerPrice":70,"type":"Starters[Non-Veg]"},
-{"restID":2,"qty_left":5,"qty_sold":0,"dish":"Pepper Chicken","originalPrice":120,"offerPrice":70,"type":"Starters[Non-Veg]"},
-{"restID":2,"qty_left":6,"qty_sold":0,"dish":"Andhra Chicken","originalPrice":130,"offerPrice":100,"type":"Starters[Non-Veg]"},
-{"restID":2,"qty_left":4,"qty_sold":0,"dish":"Chicken Biryani","originalPrice":130,"offerPrice":80,"type":"Biryani"},
-{"restID":2,"qty_left":8,"qty_sold":0,"dish":"Mutton Biryani","originalPrice":170,"offerPrice":100,"type":"Biryani"}]}
-r = requests.post(url="https://1dbf2a54.ngrok.io/addOffers",data = json.dumps(data),headers=head)
+data = {"data":[{"restID":3,"qty_left":10,"qty_sold":0,"dish":"Chicken Tikka","originalPrice":120,"offerPrice":70,"type":"Starters[Non-Veg]"},
+{"restID":2,"qty_left":5,"qty_sold":0,"dish":"Chicken Makhanwala","originalPrice":120,"offerPrice":100,"type":"Starters[Non-Veg]"},
+{"restID":3,"qty_left":6,"qty_sold":0,"dish":"Hariyali Chicken Kebab","originalPrice":150,"offerPrice":110,"type":"Starters[Non-Veg]"},
+{"restID":2,"qty_left":4,"qty_sold":0,"dish":"Malai Chicken Kebab","originalPrice":130,"offerPrice":100,"type":"Kebab"},
+{"restID":3,"qty_left":8,"qty_sold":0,"dish":"Mutton Seekh Kebab","originalPrice":250,"offerPrice":150,"type":"Kebab"},
+{"restID":2,"qty_left":8,"qty_sold":0,"dish":"Mutton Biryani","originalPrice":170,"offerPrice":110,"type":"Biryani"},
+{"restID":3,"qty_left":8,"qty_sold":0,"dish":"Chiken Biryani","originalPrice":200,"offerPrice":150,"type":"Biryani"},
+{"restID":2,"qty_left":8,"qty_sold":0,"dish":"Mutton Rogan Josh","originalPrice":170,"offerPrice":120,"type":"Kebab"}]}
+r = requests.post(url="https://fd8623cd.ngrok.io/addOffers",data = json.dumps(data),headers=head)
