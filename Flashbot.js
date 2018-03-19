@@ -8,15 +8,9 @@ var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
-<<<<<<< HEAD
 var activelink ='https://e61e5ead.ngrok.io/';
 var recommendationLink = 'https://e61e5ead.ngrok.io/';
 let token = 'EAAHdua7I9ZAsBAOyIhP5vyDAxWzjQjX7OsRYogfA4tgI8ZA5JO84IjUV8glnio1ZAT4nPvAu2uscAu4NcSHoAgIUQWnDXldwyhEro7jlfjtAZABnu1epU9pZBZAZCGPVFp1cUdoWk1GOZA743blIrwbCVGjwclpFUnGaG6tW79GcSgZDZD';
-=======
-var activelink ='https://cae0df22.ngrok.io/';
-var recommendationLink = 'https://cae0df22.ngrok.io/';
-let token = 'EAAEms8xEwDABAKZBnOcTDqtzJBBWTUuQLJXRRlcD16RiZCPaKbIy8ah4JcOwOUDGurvL4qqZBVdRaQZAlLIAkjQSaZCa4dTh7MeZBZAgfLpFstKgNfWtYSwjRUXCtd1vmIg5akomsvJ1ffUqYzkYMYuTiAz14KKvq5zAr0vk5ysAgZDZD';
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
 
 
 // The rest of the code implements the routes for our Express server.
@@ -173,7 +167,6 @@ function sendMessage(event){
                 callPost("add", sender, finalDict, "claimOffer/" + sender)
               }
 
-<<<<<<< HEAD
 
           //popular offers
           else if(response.result.action === 'popular.offer'){
@@ -196,8 +189,6 @@ function sendMessage(event){
             console.log(operation)
             callCondition("confirm", sender, operation, "Here is the your receipt for your order!")
           }
-=======
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
 
 
         });
@@ -278,7 +269,6 @@ function receivedPostback(event) {
                         case "showCart":
                               var operation = activelink + 'showCart/' + sender;
                               callCondition("showcart", sender, operation, "Here is your cart!")
-<<<<<<< HEAD
                         break;
                         case "popularOffers":
                                 var operation = activelink + "showPopulars/" + sender;
@@ -290,8 +280,6 @@ function receivedPostback(event) {
                                callCondition("cheapOffers", sender, operation, "Here are the cheapest offers in your area!")
 
                         break;
-=======
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
 
                         default:
                                 console.log("hgdhd"+payload);
@@ -316,7 +304,6 @@ function receivedPostback(event) {
                 console.log(response.result);
                 aiText = response.result.fulfillment.speech;
                 sendTextMessage(sender, aiText)
-<<<<<<< HEAD
             }else if (response.result.action){
                aiText = response.result.fulfillment.speech;
                sendTextMessage(sender, aiText);
@@ -324,10 +311,6 @@ function receivedPostback(event) {
             }
 
 
-=======
-            }
-
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
         });
         apiai.on('error', (error) => {
             console.log(error);
@@ -372,7 +355,6 @@ function callCondition(tags,sender,operation,aiText){
 
       else if(tags==="offers"){
          //console.log("offers response"+res.body);
-<<<<<<< HEAD
         body=JSON.parse(body);
          console.log(body.length);
          if(body.length != 0){
@@ -421,28 +403,11 @@ function callCondition(tags,sender,operation,aiText){
             }
         }
         
-=======
-         body=JSON.parse(body);
-        // console.log(body);
-         var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
-         for(var i=0; i<body.length; i++){
-              dish.push(body[i]["dish"] + " - Rs. " + body[i]["offerPrice"]);
-              link.push(body[i]["link"])
-              //ferPrice.push(body[i]["offerPrice"])
-              originalPrice.push(body[i]["originalPrice"])
-              restName.push(body[i]["restName"]);
-         }
-         console.log(dish);
-         console.log(originalPrice);
-         console.log(restName)
-         dataRequest(sender, dish, link, originalPrice, restName);
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
 
        
         sendButton(sender, ["postback", "postback"],c, ["getOffers", "CONFIRM"], ["More Offers", "Confirm"], "tall");
       }
 
-<<<<<<< HEAD
       //popular offers
       else if (tags === "showPopulars"){
          //console.log("offers response"+res.body);
@@ -472,31 +437,6 @@ function callCondition(tags,sender,operation,aiText){
        }
 
     }
-=======
-      else if(tags === "showcart"){
-        body = JSON.parse(body);
-        console.log(body.length)
-       // for(var key in body){
-          //console.log("sss")
-          var c ="";
-          if(body['cart']==="Yes"){
-           // console.log(body['status'])
-            if(body['status'][0]==="Yes"){
-              console.log(body['dish'])
-              for(var i=0; i<body['dish'].length; i++){
-                console.log(body['dish'][i])
-                c += '('+ body['dish'][i]+')'+' x '+ body['qty'][i]+"\n";
-              }
-              console.log(c)
-
-            }  
-          }
-         // console.log(key);
-        //}
-
-        console.log("fdskhd");
-      }
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
 
 
       //cheap offers
@@ -533,6 +473,26 @@ function callCondition(tags,sender,operation,aiText){
         body = JSON.parse(body)
         console.log(body.length)
         console.log(body)
+
+        var dish = []
+        var qty = []
+        var price = []
+        if(body['cart']==="Yes"){
+           // console.log(body['status'])
+            if(body['status'][0]==="Yes"){
+              console.log(body['dish'])
+              for(var i=0; i<body['dish'].length; i++){
+                console.log(body['dish'][i])
+                dish.add(body['dish'][i])
+                qty.add(body['qty'][i])
+                price.add(body['price'][i])
+                
+              }
+              
+
+            }
+        }
+
       }
 
   })
@@ -579,7 +539,6 @@ function callPost(tag,sender, messageData,callName){
           sendTextMessage(sender, "We have " + result.remaining + " of " + result.dish + " remaining.")
         }
         console.log("dschuijd")
-<<<<<<< HEAD
       }
 
 
@@ -587,8 +546,6 @@ function callPost(tag,sender, messageData,callName){
       else if(tag === "confirm"){
 
         sendTextMessage(sender, "confirmed")
-=======
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
       }
     })
 }
@@ -884,10 +841,7 @@ function sendButton(recipientId,type,text,payload,caption,size){
         //console.log(messageData);
         // console.log(messageData.message.attachment.payload);
         callSendAPI(messageData);
-<<<<<<< HEAD
         sendButton(recipientId, ["postback", "postback"], "Select any option below.", ["cheapOffers", "popularOffers"], ["On A Budget", "Popular offers"], "tall")
-=======
->>>>>>> 483e9c1bc58ace2ef917939fcafc2947a3257af9
     }
   //console.log(messageData);
   // console.log(messageData.message.attachment.payload);}
