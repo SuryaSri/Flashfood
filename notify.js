@@ -144,6 +144,7 @@ app.post('/',function(req,res){
 	}
     //sendTextMessage('1357968537622144',messageText);
    // sendTextMessage(sender2,messageText);
+   callnotify(messageText)
 	res.sendStatus(200);
 })
 
