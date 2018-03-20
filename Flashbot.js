@@ -8,8 +8,10 @@ var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
+
 var activelink ='https://1c198609.ngrok.io/';
 var recommendationLink = 'https://1c198609.ngrok.io/';
+
 let token = 'EAAHdua7I9ZAsBAOyIhP5vyDAxWzjQjX7OsRYogfA4tgI8ZA5JO84IjUV8glnio1ZAT4nPvAu2uscAu4NcSHoAgIUQWnDXldwyhEro7jlfjtAZABnu1epU9pZBZAZCGPVFp1cUdoWk1GOZA743blIrwbCVGjwclpFUnGaG6tW79GcSgZDZD';
 
 
@@ -122,7 +124,7 @@ function sendMessage(event){
   let apiai = apiaiApp.textRequest(text, {
           sessionId: sender // use any arbitrary id
         });
-  
+
 
   //sending response to facebook
   apiai.on('response', (response) => {
@@ -130,12 +132,12 @@ function sendMessage(event){
           var condition=response.result.metadata.intentName
           var aiText=response.result.fulfillment.speech;
           var operation;
-          
+
           if(condition==='Greeting!'){
             operation=activelink + 'getUser/' + sender;
             console.log(operation)
             callCondition("user_status",sender,operation,aiText);
-            
+
           }
 
           else if(response.result.action  === 'show.offer'){
@@ -170,7 +172,7 @@ function sendMessage(event){
 
           //popular offers
           else if(response.result.action === 'popular.offer'){
-              
+
               var operation = activelink + "showPopulars/" + sender;
               callCondition("showPopulars", sender, operation, "Here are the popular offers in your area!")
 
@@ -246,12 +248,14 @@ function receivedPostback(event) {
                         case 'NON_VEG_OFFERS':
                         //callredis
                               console.log(payload + " sender: " + sender);
+                              var operation = activelink + "getOffers/" + sender;
+                              callCondition("offers", sender, operation, "Here are the awesome offers for you!")
                         break;
                         case 'UNSUBSCRIBE':
                               console.log(payload + " event: " + sender);
                         break;
                         case 'SUBSCRIBE':
-                          //ask name 
+                          //ask name
                           console.log(payload + "event:" + sender);
                           var messageData={
                             ID:sender,
@@ -299,7 +303,7 @@ function receivedPostback(event) {
             if (response.result.action === "set.location") {
                 aiText = response.result.fulfillment.speech;
                 sendTextMessage(sender,aiText);
-               
+
             }else if (response.result.action === "process.card") {
                 console.log(response.result);
                 aiText = response.result.fulfillment.speech;
@@ -346,7 +350,7 @@ function callCondition(tags,sender,operation,aiText){
 
       if(body.subscribed===1 && body.location===1){
           sendTextMessage(sender, "You've selected this address: "+body.decoded_address)
-         // CustomQuickreply(sender,"fdfds",2);
+          //CustomQuickreply(sender,"Enter new address",2);
           var operation = activelink + "getOffers/" + sender;
           callCondition("offers", sender, operation, "Here are the awesome offers for you!")
       }
@@ -358,7 +362,7 @@ function callCondition(tags,sender,operation,aiText){
         body=JSON.parse(body);
          console.log(body.length);
          if(body.length != 0){
-         
+
             var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
 
             for(var i=0; i<body.length; i++){
@@ -372,7 +376,7 @@ function callCondition(tags,sender,operation,aiText){
          console.log(dish);
          console.log(originalPrice);
          console.log(restName)
-         dataRequest(sender, dish, link, originalPrice, restName); 
+         dataRequest(sender, dish, link, originalPrice, restName);
        }
 
        else{
@@ -396,15 +400,15 @@ function callCondition(tags,sender,operation,aiText){
               for(var i=0; i<body['dish'].length; i++){
                 console.log(body['dish'][i])
                 c += '('+ body['dish'][i]+')'+' x '+ body['qty'][i]+ ' = ' + body['price'][i] * body['qty'][i] +"\n";
-                
+
               }
               console.log(c)
 
             }
         }
-        
 
-       
+
+
         sendButton(sender, ["postback", "postback"],c, ["getOffers", "CONFIRM"], ["More Offers", "Confirm"], "tall");
       }
 
@@ -414,7 +418,7 @@ function callCondition(tags,sender,operation,aiText){
          body=JSON.parse(body);
          console.log(body.length);
          if(body.length != 0){
-         
+
             var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
 
             for(var i=0; i<body.length; i++){
@@ -428,7 +432,7 @@ function callCondition(tags,sender,operation,aiText){
          console.log(dish);
          console.log(originalPrice);
          console.log(restName)
-         dataRequest(sender, dish, link, originalPrice, restName); 
+         dataRequest(sender, dish, link, originalPrice, restName);
        }
 
        else{
@@ -444,7 +448,7 @@ function callCondition(tags,sender,operation,aiText){
              body=JSON.parse(body);
          console.log(body.length);
          if(body.length != 0){
-         
+
             var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
 
             for(var i=0; i<body.length; i++){
@@ -458,7 +462,7 @@ function callCondition(tags,sender,operation,aiText){
          console.log(dish);
          console.log(originalPrice);
          console.log(restName)
-         dataRequest(sender, dish, link, originalPrice, restName); 
+         dataRequest(sender, dish, link, originalPrice, restName);
        }
 
        else{
@@ -487,9 +491,9 @@ function callCondition(tags,sender,operation,aiText){
                 dish.push(body['dish'][i])
                 qty.push(body['qty'][i])
                 price.push(body['price'][i])
-                
+
               }
-              
+
             }
 
             else{
@@ -503,9 +507,10 @@ function callCondition(tags,sender,operation,aiText){
             console.log(b['name'])
             console.log(b['number'])
 
+
           }
 
-          sendReciept(sender, b['total'], b['name'], b['total'], dish, qty, price, "ddress", b['name'], b['number'])
+          sendReciept(sender, b['total'], b['name'], b['total'], dish, qty, price, b['address'], b['name'], b['number'])
       }
 
   })
@@ -530,7 +535,7 @@ function sendReciept(recipientID,newdiscount,name,total,titles,quantity,price,ad
                         attachment:{
                                 type:"template",
                                 payload:{
-                                    
+
                                         template_type:"receipt",
                                         recipient_name:Name,
                                         order_number:recipientID,
@@ -576,7 +581,11 @@ function makeJsonreceipt(title,quantity,price){
                 quantity : quantity,
                 price : price,
                 currency:"INR",
-                image_url:"http://assets.limetray.com/assets/user_images/logos/original/Logos_1464774908.png"
+
+                image_url:"https://goo.gl/images/PKrUUJ"
+
+
+
                 }
         return elements;
 }
@@ -616,7 +625,7 @@ function callPost(tag,sender, messageData,callName){
 
             else if (result.subscribed===1 && result.location==1){
               sendTextMessage(sender, "You have selected " + response.decoded_address + " as your address.")
-            //dataRequest(sender, titles, images )
+              dataRequest(sender, titles, images )
             }
       }
 

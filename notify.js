@@ -142,15 +142,13 @@ app.post('/',function(req,res){
 	else {
 		console.log("aa"+JSON.stringify(req.body));
 	}
-<<<<<<< HEAD
+
     sendTextMessage('242329659580091',messageText);
    // sendTextMessage(sender2,messageText);
     callnotify(messageText)
-=======
     //sendTextMessage('1357968537622144',messageText);
    // sendTextMessage(sender2,messageText);
    callnotify(messageText)
->>>>>>> c8801e721dab97e5f9611721e9dde37843fc58ea
 	res.sendStatus(200);
 })
 
