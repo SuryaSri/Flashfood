@@ -8,8 +8,8 @@ var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
-var activelink ='https://1c198609.ngrok.io';
-var recommendationLink = 'https://1c198609.ngrok.io';
+var activelink ='https://1c198609.ngrok.io/';
+var recommendationLink = 'https://1c198609.ngrok.io/';
 let token = 'EAAHdua7I9ZAsBAOyIhP5vyDAxWzjQjX7OsRYogfA4tgI8ZA5JO84IjUV8glnio1ZAT4nPvAu2uscAu4NcSHoAgIUQWnDXldwyhEro7jlfjtAZABnu1epU9pZBZAZCGPVFp1cUdoWk1GOZA743blIrwbCVGjwclpFUnGaG6tW79GcSgZDZD';
 
 

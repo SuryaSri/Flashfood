@@ -3,8 +3,8 @@ const request = require('request');
 var activelink = 'https://1c198609.ngrok.io/'
 
 module.exports =  function(sender, messageData){
-	  
-	  var messageData = {"data":[{"restID":3,"qty_left":10,"qty_sold":0,"dish":"Chicken Tikka","originalPrice":120,"offerPrice":70,"type":"Starters[Non-Veg]"},
+
+ var messageData = {"data":[{"restID":3,"qty_left":10,"qty_sold":0,"dish":"Chicken Tikka","originalPrice":120,"offerPrice":70,"type":"Starters[Non-Veg]"},
 {"restID":2,"qty_left":5,"qty_sold":0,"dish":"Chicken Makhanwala","originalPrice":120,"offerPrice":100,"type":"Starters[Non-Veg]"},
 {"restID":3,"qty_left":6,"qty_sold":0,"dish":"Hariyali Chicken Kebab","originalPrice":150,"offerPrice":110,"type":"Starters[Non-Veg]"},
 {"restID":2,"qty_left":4,"qty_sold":0,"dish":"Malai Chicken Kebab","originalPrice":130,"offerPrice":100,"type":"Kebab"},
@@ -23,7 +23,7 @@ module.exports =  function(sender, messageData){
       json: messageData
     }, function(error, response, body){
       if(error) throw error;
-      //console.log(response.body)
+      console.log(response.body)
 
 	})
 		return "Successfully added dishes";

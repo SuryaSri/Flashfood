@@ -237,7 +237,7 @@ global OffersDB
 OffersDB = pd.DataFrame(data = {}, columns = ['ID','restID','dish','qty_sold','qty_left','type','originalPrice','offerPrice','link','restName'])
 global offerRests
 offerRests = []
-
+#curl --data build=true -X POST https://registry.hub.docker.com/u/suryavampire/flashfood/trigger/ec22f933-6c06-4d1f-9a41-c53c853102dd/
 
 @post('/addOffers')
 def addOffer():
