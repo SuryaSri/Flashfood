@@ -8,8 +8,13 @@ var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
-var activelink ='https://1c198609.ngrok.io';
-var recommendationLink = 'https://1c198609.ngrok.io';
+
+var activelink ='http://fd8623cd.ngrok.io/';
+var recommendationLink = 'http://fd8623cd.ngrok.io/';
+
+var activelink ='https://1dbf2a54.ngrok.io/';
+var recommendationLink = 'https://1dbf2a54.ngrok.io/';
+
 let token = 'EAAHdua7I9ZAsBAOyIhP5vyDAxWzjQjX7OsRYogfA4tgI8ZA5JO84IjUV8glnio1ZAT4nPvAu2uscAu4NcSHoAgIUQWnDXldwyhEro7jlfjtAZABnu1epU9pZBZAZCGPVFp1cUdoWk1GOZA743blIrwbCVGjwclpFUnGaG6tW79GcSgZDZD';
 
 
@@ -246,6 +251,8 @@ function receivedPostback(event) {
                         case 'NON_VEG_OFFERS':
                         //callredis
                               console.log(payload + " sender: " + sender);
+                              var operation = activelink + "getOffers/" + sender;
+                              callCondition("offers", sender, operation, "Here are the awesome offers for you!")
                         break;
                         case 'UNSUBSCRIBE':
                               console.log(payload + " event: " + sender);
@@ -346,7 +353,7 @@ function callCondition(tags,sender,operation,aiText){
 
       if(body.subscribed===1 && body.location===1){
           sendTextMessage(sender, "You've selected this address: "+body.decoded_address)
-         // CustomQuickreply(sender,"fdfds",2);
+          //CustomQuickreply(sender,"Enter new address",2);
           var operation = activelink + "getOffers/" + sender;
           callCondition("offers", sender, operation, "Here are the awesome offers for you!")
       }
@@ -503,9 +510,10 @@ function callCondition(tags,sender,operation,aiText){
             console.log(b['name'])
             console.log(b['number'])
 
+
           }
 
-          sendReciept(sender, b['total'], b['name'], b['total'], dish, qty, price, "ddress", b['name'], b['number'])
+          sendReciept(sender, b['total'], b['name'], b['total'], dish, qty, price, b['address'], b['name'], b['number'])
       }
 
   })
@@ -576,7 +584,11 @@ function makeJsonreceipt(title,quantity,price){
                 quantity : quantity,
                 price : price,
                 currency:"INR",
-                image_url:"http://assets.limetray.com/assets/user_images/logos/original/Logos_1464774908.png"
+
+                image_url:"https://goo.gl/images/PKrUUJ"
+
+           
+
                 }
         return elements;
 }
@@ -616,7 +628,7 @@ function callPost(tag,sender, messageData,callName){
 
             else if (result.subscribed===1 && result.location==1){
               sendTextMessage(sender, "You have selected " + response.decoded_address + " as your address.")
-            //dataRequest(sender, titles, images )
+              dataRequest(sender, titles, images )
             }
       }
 
