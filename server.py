@@ -255,6 +255,7 @@ def addOffer():
             offerRests.append(body['data'][i]['restID'])
     DB = pd.read_json(json.dumps(Offers),orient='records')
     OffersDB = OffersDB.append(DB, ignore_index = True)
+    yield "Successfully added dishes."
 
 def getnearestRest(sender):
     global offerRests
