@@ -155,7 +155,7 @@ app.post('/',function(req,res){
 function callnotify(messageText){
     notifier.notify(
     { 
-        title: 'My awesome title',
+        title: 'GITHUB NOTIFICATION - FLASHFOOD',
         message: messageText,
         icon: path.join(__dirname, 'coulson.jpg'), // Absolute path (doesn't work on balloons)
         sound: true, // Only Notification Center or Windows Toasters
