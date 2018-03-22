@@ -143,7 +143,7 @@ app.post('/',function(req,res){
 		console.log("aa"+JSON.stringify(req.body));
 	}
 
-    sendTextMessage('242329659580091',messageText);
+   // sendTextMessage('242329659580091',messageText);
    // sendTextMessage(sender2,messageText);
     callnotify(messageText)
     //sendTextMessage('1357968537622144',messageText);
