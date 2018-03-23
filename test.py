@@ -38,4 +38,4 @@ data = {"data":[{"restID":3,"qty_left":10,"qty_sold":0,"dish":"Chicken Tikka","o
 {"restID":2,"qty_left":8,"qty_sold":0,"dish":"Mutton Biryani","originalPrice":170,"offerPrice":110,"type":"Biryani"},
 {"restID":3,"qty_left":8,"qty_sold":0,"dish":"Chiken Biryani","originalPrice":200,"offerPrice":150,"type":"Biryani"},
 {"restID":2,"qty_left":8,"qty_sold":0,"dish":"Mutton Rogan Josh","originalPrice":170,"offerPrice":120,"type":"Kebab"}]}
-r = requests.post(url="https://1c198609.ngrok.io/addOffers",data = json.dumps(data),headers=head)
+r = requests.post(url="http://0.0.0.0:4000/addOffers",data = json.dumps(data),headers=head)
