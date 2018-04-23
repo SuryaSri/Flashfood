@@ -3,12 +3,12 @@ const express = require('express');
 const request = require('request');
 const path = require('path');
 const notifier = require('node-notifier');
-const path = require('path');
+//const path = require('path');
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
 let app=express();
-let token ='EAAHdua7I9ZAsBAPHffdZCGfmJ1ChXkEL2ZCUPhzO029bjT36Is2qp8YYa9jl1TmHbaXcMKVDxCVUVlkWRLarKFeuL5oFRTMrz7cICZB4DZBk5K0xslC1ZBBMC5kQzZCiZCGYUeT2hHVLk51PZAH7B9LsYZAyCrnvlb7VNZAmzZBNZCmOeZAQZDZD';
+let token = 'EAACO3NMPdLMBAARvBMzcnZCo6K4AZCBW9IOBbQfbsx3Qb5URKnMqkZBIEqFOteEXBLnvw0HJpbA73nIaWYHVS88AOCjZASVNIPKHSZBnV9hZCHrQzQ32NEgUDTo43IULimvWJ2p3VVcG69qEQOZARCimbnOcOeL4ro1qtuZA3hBiLAZDZD';
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
@@ -142,15 +142,20 @@ app.post('/',function(req,res){
 	else {
 		console.log("aa"+JSON.stringify(req.body));
 	}
-    sendTextMessage('1357968537622144',messageText);
+
+   // sendTextMessage('242329659580091',messageText);
    // sendTextMessage(sender2,messageText);
+    callnotify(messageText)
+    //sendTextMessage('1357968537622144',messageText);
+   // sendTextMessage(sender2,messageText);
+   callnotify(messageText)
 	res.sendStatus(200);
 })
 
 function callnotify(messageText){
     notifier.notify(
     { 
-        title: 'My awesome title',
+        title: 'GITHUB NOTIFICATION - FLASHFOOD',
         message: messageText,
         icon: path.join(__dirname, 'coulson.jpg'), // Absolute path (doesn't work on balloons)
         sound: true, // Only Notification Center or Windows Toasters

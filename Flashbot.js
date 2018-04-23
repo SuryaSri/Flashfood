@@ -1,5 +1,3 @@
-/* Vaibhav Aggarwal 4 july,2017 */
-
 'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -7,15 +5,14 @@ const request = require('request');
 const path = require('path');
 const apiaiApp = require('apiai')('b5197f58ead44a4d8e542dd3cf3d717e');
 var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><body><h1>Facebook Messenger Bot</h1>This is a bot based on Messenger Platform QuickStart. For more details, see their <a href=\"https://developers.facebook.com/docs/messenger-platform/guides/quick-start\">docs</a>.<script src=\"https://button.glitch.me/button.js\" data-style=\"glitch\"></script><div class=\"glitchButton\" style=\"position:fixed;top:20px;right:20px;\"></div></body></html>";
-//var mongo = require('mongodb');
-//var MongoClient = require('mongodb').MongoClient;
-//var url = "mongodb://localhost:27017/mydb";
 var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
-var activelink ='https://332ce7c0.ngrok.io/';
-var recommendationLink = 'https://332ce7c0.ngrok.io';
-let token = 'EAAHdua7I9ZAsBAKyT44RgxnO5h6WzHulrG0TaukJQcIJ1Rl4PQyBo1zYLQt6g5rbGWLM8VuVqld94ESnxYKtQHnZClBcOyq0SRBPgK3u8kdHW5FHPmTKTJ9Oo5CXBXKRbsCMzxS4acD3PnAQTegGIwIq976cCapU0dZBwMBdAZDZD';
+
+var activelink ='https://b831c2b1.ngrok.io/';
+var recommendationLink = 'https://b831c2b1.ngrok.io/';
+
+let token = 'EAAHdua7I9ZAsBAOyIhP5vyDAxWzjQjX7OsRYogfA4tgI8ZA5JO84IjUV8glnio1ZAT4nPvAu2uscAu4NcSHoAgIUQWnDXldwyhEro7jlfjtAZABnu1epU9pZBZAZCGPVFp1cUdoWk1GOZA743blIrwbCVGjwclpFUnGaG6tW79GcSgZDZD';
 
 
 // The rest of the code implements the routes for our Express server.
@@ -127,7 +124,7 @@ function sendMessage(event){
   let apiai = apiaiApp.textRequest(text, {
           sessionId: sender // use any arbitrary id
         });
-  
+
 
   //sending response to facebook
   apiai.on('response', (response) => {
@@ -135,14 +132,65 @@ function sendMessage(event){
           var condition=response.result.metadata.intentName
           var aiText=response.result.fulfillment.speech;
           var operation;
-          
+
           if(condition==='Greeting!'){
             operation=activelink + 'getUser/' + sender;
             console.log(operation)
             callCondition("user_status",sender,operation,aiText);
-            
+
           }
 
+          else if(response.result.action  === 'show.offer'){
+             console.log("dffdf");
+             var operation = activelink + "getOffers/" + sender;
+             callCondition("offers", sender, operation, "Here are the awesome offers for you!")
+          }
+          else if (response.result.action === "process_card.process_card-selectnumber") {
+                var dish = toTitleCase(response.result.parameters.dish) ;
+                var number = response.result.parameters.number;
+                var dict = {};
+                dict[dish] = number;
+                var myjson = JSON.stringify(dict);
+                var finalDict = "";
+                for (var i = 0; i < myjson.length; i++) {
+                    if (myjson[i] === ' ')
+                        finalDict += ' ';
+                    else
+                        finalDict += myjson[i];
+                }
+                finalDict = finalDict;
+                var add = 'claimoffer/' + sender  ;
+                var final = activelink + add;
+
+                console.log(add);
+                var reply = response.result.fulfillment.speech;
+                //var reply="A "+ payload + " has been added";
+             //dfds   callSendRedisapi('add', final, sender, reply);
+                callPost("add", sender, finalDict, "claimOffer/" + sender)
+              }
+
+
+          //popular offers
+          else if(response.result.action === 'popular.offer'){
+
+              var operation = activelink + "showPopulars/" + sender;
+              callCondition("showPopulars", sender, operation, "Here are the popular offers in your area!")
+
+          }
+
+          else if(response.result.action === "cheap.offer"){
+
+             var operation = activelink + "cheapOffers/" + sender;
+             callCondition("cheapOffers", sender, operation, "Here are the cheapest offers in your area!")
+
+          }
+
+          else if(response.result.action === "Confirm.Confirm-yes"){
+
+            var operation = activelink + "confirm/" + sender + "/" + response.result.parameters['phone-number']
+            console.log(operation)
+            callCondition("confirm", sender, operation, "Here is the your receipt for your order!")
+          }
 
 
         });
@@ -200,12 +248,14 @@ function receivedPostback(event) {
                         case 'NON_VEG_OFFERS':
                         //callredis
                               console.log(payload + " sender: " + sender);
+                              var operation = activelink + "getOffers/" + sender;
+                              callCondition("offers", sender, operation, "Here are the awesome offers for you!")
                         break;
                         case 'UNSUBSCRIBE':
                               console.log(payload + " event: " + sender);
                         break;
                         case 'SUBSCRIBE':
-                          //ask name 
+                          //ask name
                           console.log(payload + "event:" + sender);
                           var messageData={
                             ID:sender,
@@ -216,6 +266,25 @@ function receivedPostback(event) {
                           callPost("greeting",sender, messageData, "addUser")
                         break;
                        // case 'change_address'
+                       case 'getOffers':
+                              var operation = activelink + "getOffers/" + sender;
+                              callCondition("offers", sender, operation, "Here are the awesome offers for you!")
+                        break;
+                        case "showCart":
+                              var operation = activelink + 'showCart/' + sender;
+                              callCondition("showcart", sender, operation, "Here is your cart!")
+                        break;
+                        case "popularOffers":
+                                var operation = activelink + "showPopulars/" + sender;
+                                callCondition("showPopulars", sender, operation, "Here are the popular offers in your area!")
+                        break;
+
+                        case "cheapOffers":
+                               var operation = activelink + "cheapOffers/" + sender;
+                               callCondition("cheapOffers", sender, operation, "Here are the cheapest offers in your area!")
+
+                        break;
+
                         default:
                                 console.log("hgdhd"+payload);
                                 SpecialIntents(payload,sender);
@@ -234,12 +303,18 @@ function receivedPostback(event) {
             if (response.result.action === "set.location") {
                 aiText = response.result.fulfillment.speech;
                 sendTextMessage(sender,aiText);
-               
+
             }else if (response.result.action === "process.card") {
                 console.log(response.result);
                 aiText = response.result.fulfillment.speech;
-                sendTextMessage()
+                sendTextMessage(sender, aiText)
+            }else if (response.result.action){
+               aiText = response.result.fulfillment.speech;
+               sendTextMessage(sender, aiText);
+
             }
+
+
         });
         apiai.on('error', (error) => {
             console.log(error);
@@ -247,18 +322,25 @@ function receivedPostback(event) {
         apiai.end();
     }
 
+  function toTitleCase(str) {
+        return str.replace(/\w\S*/g, function(txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        });
+    }
+
 
 //Api calls
 function callCondition(tags,sender,operation,aiText){
-  console.log(operation)
+  console.log(operation + tags)
   request_1.getAsync({
     url:operation,
     method:'GET'
   }).then(function(res, err){
-    var body=JSON.parse(res.body);
+    var body=(res.body);
     console.log(res.body);
     if(err) throw err;
-    if(tags="user_status"){
+    if(tags==="user_status"){
+      body=JSON.parse(body);
       if(body.subscribed===0){
 
 
@@ -268,19 +350,265 @@ function callCondition(tags,sender,operation,aiText){
 
       if(body.subscribed===1 && body.location===1){
           sendTextMessage(sender, "You've selected this address: "+body.decoded_address)
-          CustomQuickreply(sender,"fdfds",2);
+          //CustomQuickreply(sender,"Enter new address",2);
+          var operation = activelink + "getOffers/" + sender;
+          callCondition("offers", sender, operation, "Here are the awesome offers for you!")
       }
 
-      if(body.subscribed===2){
-
-      }
     }
+
+      else if(tags==="offers"){
+         //console.log("offers response"+res.body);
+        body=JSON.parse(body);
+         console.log(body.length);
+         if(body.length != 0){
+
+            var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
+
+            for(var i=0; i<body.length; i++){
+                dish.push(body[i]["dish"] + " - Rs. " + body[i]["offerPrice"]);
+                link.push(body[i]["link"])
+                //ferPrice.push(body[i]["offerPrice"])
+                originalPrice.push(body[i]["originalPrice"])
+                restName.push(body[i]["restName"]);
+            }
+
+         console.log(dish);
+         console.log(originalPrice);
+         console.log(restName)
+         dataRequest(sender, dish, link, originalPrice, restName);
+       }
+
+       else{
+
+          sendTextMessage(sender, "Sorry! Right now, we don't have any offers available.")
+       }
+
+
+      }
+
+      else if(tags === "showcart"){
+        body = JSON.parse(body);
+        console.log(body.length)
+       // for(var key in body){
+          //console.log("sss")
+          var c = "Here is your current cart !\n";
+          if(body['cart']==="Yes"){
+           // console.log(body['status'])
+            if(body['status'][0]==="Yes"){
+              console.log(body['dish'])
+              for(var i=0; i<body['dish'].length; i++){
+                console.log(body['dish'][i])
+                c += '('+ body['dish'][i]+')'+' x '+ body['qty'][i]+ ' = ' + body['price'][i] * body['qty'][i] +"\n";
+
+              }
+              console.log(c)
+
+            }
+        }
+
+
+
+        sendButton(sender, ["postback", "postback"],c, ["getOffers", "CONFIRM"], ["More Offers", "Confirm"], "tall");
+      }
+
+      //popular offers
+      else if (tags === "showPopulars"){
+         //console.log("offers response"+res.body);
+         body=JSON.parse(body);
+         console.log(body.length);
+         if(body.length != 0){
+
+            var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
+
+            for(var i=0; i<body.length; i++){
+                dish.push(body[i]["dish"] + " - Rs. " + body[i]["offerPrice"]);
+                link.push(body[i]["link"])
+                //ferPrice.push(body[i]["offerPrice"])
+                originalPrice.push(body[i]["originalPrice"])
+                restName.push(body[i]["restName"]);
+            }
+
+         console.log(dish);
+         console.log(originalPrice);
+         console.log(restName)
+         dataRequest(sender, dish, link, originalPrice, restName);
+       }
+
+       else{
+
+          sendTextMessage(sender, "Sorry! Right now, we don't have any offers available.")
+       }
+
+    }
+
+
+      //cheap offers
+      else if(tags === "cheapOffers"){
+             body=JSON.parse(body);
+         console.log(body.length);
+         if(body.length != 0){
+
+            var dish = [], link =[], offerPrice =[], originalPrice=[], restName=[];
+
+            for(var i=0; i<body.length; i++){
+                dish.push(body[i]["dish"] + " - Rs. " + body[i]["offerPrice"]);
+                link.push(body[i]["link"])
+                //ferPrice.push(body[i]["offerPrice"])
+                originalPrice.push(body[i]["originalPrice"])
+                restName.push(body[i]["restName"]);
+            }
+
+         console.log(dish);
+         console.log(originalPrice);
+         console.log(restName)
+         dataRequest(sender, dish, link, originalPrice, restName);
+       }
+
+       else{
+
+          sendTextMessage(sender, "Sorry! Right now, we don't have any offers available.")
+       }
+      }
+
+
+      //confirm
+      else if(tags === "confirm"){
+        var b= JSON.parse(body)
+        console.log(body.length)
+        console.log(b['body'])
+        body = b['body']
+
+        var dish = []
+        var qty = []
+        var price = []
+        if(body['cart']==="Yes"){
+           console.log(body['status'])
+            if(body['status'][0]==="Yes"){
+              console.log(body['dish'])
+              for(var i=0; i<body['dish'].length; i++){
+                console.log(body['dish'][i])
+                dish.push(body['dish'][i])
+                qty.push(body['qty'][i])
+                price.push(body['price'][i])
+
+              }
+
+            }
+
+            else{
+
+            }
+
+            console.log(dish)
+            console.log(qty)
+            console.log(price)
+            console.log(b['total'])
+            console.log(b['name'])
+            console.log(b['number'])
+
+
+          }
+
+          sendReciept(sender, b['total'], b['name'], b['total'], dish, qty, price, b['address'], b['name'], b['number'])
+      }
 
   })
 }
 
+function sendReciept(recipientID,newdiscount,name,total,titles,quantity,price,address,Name,Num){
+        var cards =new Array(titles.length);
+        var string;
+        var i;
+        for(var j=0;j<titles.length;j++){
+                titles[j] = toTitleCase(titles[j].replace(/_/g, ' '));
+        }
+        for(i=0;i<titles.length;i++){
+                string=makeJsonreceipt(titles[i],quantity[i],price[i]);
+                cards[i]=string;
+        }
+        var messageData={
+                "recipient":{
+                        id:recipientID
+                        },
+                message:{
+                        attachment:{
+                                type:"template",
+                                payload:{
+
+                                        template_type:"receipt",
+                                        recipient_name:Name,
+                                        order_number:recipientID,
+                                        currency:"INR",
+                                        payment_method:"Cash on Delievery",
+                                        order_url:"http://babadadhaba.co/",
+                                        timestamp:"1428444852",
+                                        elements:cards,
+                                        address:{
+                                                street_1:address,
+                                                street_2:"",
+                                                city:"Phone Number",
+                                                postal_code:Num,
+                                                state:" : ",
+                                                country:" India "
+                                        },
+                                        summary:{
+                                                subtotal:total,
+                                                shipping_cost:0.00,
+                                                total_tax:0.00,
+                                                total_cost: total
+                                        },
+                                        adjustments:[
+                                                {
+                                                        name:"New Customer Discount",
+                                                        amount:newdiscount
+                                                },
+                                                {
+                                                        name:"10 Off Coupon",
+                                                        amount:10
+                                                }
+                                        ]
+                                }
+                        }
+                }
+        };
+        callSendAPI(messageData);
+}
+
+function makeJsonreceipt(title,quantity,price){
+        var elements={
+                title: title,
+                quantity : quantity,
+                price : price,
+                currency:"INR",
+
+                image_url:"https://goo.gl/images/PKrUUJ"
+
+
+
+                }
+        return elements;
+}
+
+function makeJson(title,imageurl){
+        var title1=title.substring(0,title.indexOf(" - Rs."));
+        var elements={
+                title: title,
+                image_url:imageurl,
+                buttons: [
+                        {
+                                type: "postback",
+                                title: "Buy "+ title1,
+                                payload: "dish.buying:" + title1
+                        }
+                ],
+        }
+        console.log(title);
+        return elements;
+}
+
 function callPost(tag,sender, messageData,callName){
-    console.log(messageData)
+    console.log(messageData + tag)
     request({
       uri:activelink + callName,
       method:'POST',
@@ -296,14 +624,37 @@ function callPost(tag,sender, messageData,callName){
            }
 
             else if (result.subscribed===1 && result.location==1){
-            //dataRequest(sender, titles, images )
+              sendTextMessage(sender, "You have selected " + response.decoded_address + " as your address.")
+              dataRequest(sender, titles, images )
             }
       }
 
       else if(tag==="adress_option"){
         sendTextMessage(sender,"You've selected this address:" + result.decoded_address);
+         var operation = activelink + "getOffers/" + sender;
+          callCondition("offers", sender, operation, "Here are the awesome offers for you!")
         //CustomQuickreply(sender,"Select from the options",1)
-        sendButton(sender,["postback"],"Enter the Place adress, If any other particulars",["Change adress"],["change_address"],"tall");
+       // sendButton(sender,["postback"],"Enter the Place adress, If any other particulars",["Change adress"],["change_address"],"tall");
+      }
+
+      else if(tag==="add"){
+        console.log(result.status)
+        if(result.status=='Yes'){
+          console.log("jkj")
+          var message = "Your dish " + result.dish + " has been added."
+          sendButton(sender,["postback","postback"],message,["getOffers","showCart"],["More Offers", "Show Cart"],"tall");
+        }
+        else if(result.status=="No"){
+          sendTextMessage(sender, "We have " + result.remaining + " of " + result.dish + " remaining.")
+        }
+        console.log("dschuijd")
+      }
+
+
+      //confirm
+      else if(tag === "confirm"){
+
+        sendTextMessage(sender, "confirmed")
       }
     })
 }
@@ -458,6 +809,7 @@ function callPost(tag,sender, messageData,callName){
             }
         }
             else if(payload==='set_saved_address'){
+                console.log("saved adress1")
                 var link=activelink+'use_saved/'+sender
                 callSendRedisAddress(link,sender)
             }
@@ -566,55 +918,60 @@ function sendButton(recipientId,type,text,payload,caption,size){
         callSendAPI(messageData);
 }
 
-function dataRequest(recipientId,titles,images,offerId){
-  var title=titles;
-  var imageurl=images;//put default image
-  var offerId = offerId;
-  var cards =new Array(title.length);
-  var string;
-  var i;
-  for(var j=0;j<titles.length;j++){
-          title[j] = toTitleCase(titles[j].replace(/_/g, ' '));
-  }
-  for(i=0;i<title.length;i++){
-          string=makeJson(title[i],imageurl,offerId[i]);
-          cards[i]=string;
-  }
-  console.log(cards);
-  var messageData = {
-          recipient :{
-                  id: recipientId
-          },
-          message: {
-                  attachment: {
-                          type: "template",
-                          payload: {
-                                  template_type: "list",
-                                  elements:cards
-                          }
-                  }
-          }
-  };
-  //console.log(messageData);
-  // console.log(messageData.message.attachment.payload);
-  callSendAPI(messageData);
-}
-function makeJson(title,imageurl){
-      //  var title1=title.substring(0,title.indexOf(" - Rs."));
-        var elements={
-                title: title,
-                image_url:imageurl,
-                buttons: [
-                        {
-                                type: "postback",
-                                title: "Buy ",
-                                payload: "Buy.Accompaniments:" + offerId
-                        }
-                ],
+
+    function dataRequest(recipientId, titles, images, originalPrice, restName) {
+        var title = titles;
+        var imageurl = images;
+        var cards = new Array(title.length);
+        var string;
+        var i;
+        for (var j = 0; j < titles.length; j++) {
+            title[j] = toTitleCase(titles[j].replace(/_/g, ' '));
         }
+        for (i = 0; i < title.length; i++) {
+            string = makeJson(title[i], imageurl[i], originalPrice[i], restName[i]);
+            cards[i] = string;
+        }
+        console.log(cards);
+        var messageData = {
+            recipient: {
+                id: recipientId
+            },
+            message: {
+                attachment: {
+                    type: "template",
+                    payload: {
+                        template_type: "generic",
+                        elements: cards
+                    }
+                }
+            }
+        };
+        //console.log(messageData);
+        // console.log(messageData.message.attachment.payload);
+        callSendAPI(messageData);
+        sendButton(recipientId, ["postback", "postback"], "Select any option below.", ["cheapOffers", "popularOffers"], ["On A Budget", "Popular offers"], "tall")
+    }
+  //console.log(messageData);
+  // console.log(messageData.message.attachment.payload);}
+
+function makeJson(title, imageurl, oPrice, rName) {
+        var title1 = title.substring(0, title.indexOf(" - Rs."));
+        var elements = {
+            title: title,
+            image_url: imageurl,
+            subtitle: "Original Price:Rs " +oPrice + "\n" + rName,
+            buttons: [{
+                type: "postback",
+                title: "Buy " + title1,
+
+                payload: "dish.buying:" + title1
+            }],
+        }
+        console.log(title1)
         console.log(title);
         return elements;
-}
+    }
 
 function sendTextMessage(recipientId, messageText) {
         var messageData = {
@@ -690,6 +1047,6 @@ function callSendAPI(messageData) {
 // Set Express to listen out for HTTP requests
 
 
-var server = app.listen(process.env.PORT || 3000, function () {
+var server = app.listen(process.env.PORT || 5000, function () {
         console.log("Listening on port %s", server.address().port);
 });

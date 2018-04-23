@@ -7,7 +7,7 @@ var http = require('http');
 var Promise = require("bluebird");
 var request_1 = Promise.promisifyAll(require("request"));
 let app=express();
-let token ='EAAHdua7I9ZAsBAPHffdZCGfmJ1ChXkEL2ZCUPhzO029bjT36Is2qp8YYa9jl1TmHbaXcMKVDxCVUVlkWRLarKFeuL5oFRTMrz7cICZB4DZBk5K0xslC1ZBBMC5kQzZCiZCGYUeT2hHVLk51PZAH7B9LsYZAyCrnvlb7VNZAmzZBNZCmOeZAQZDZD';
+let token ='EAAHdua7I9ZAsBAOyIhP5vyDAxWzjQjX7OsRYogfA4tgI8ZA5JO84IjUV8glnio1ZAT4nPvAu2uscAu4NcSHoAgIUQWnDXldwyhEro7jlfjtAZABnu1epU9pZBZAZCGPVFp1cUdoWk1GOZA743blIrwbCVGjwclpFUnGaG6tW79GcSgZDZD';
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
@@ -141,8 +141,9 @@ app.post('/',function(req,res){
 	else {
 		console.log("aa"+JSON.stringify(req.body));
 	}
-    sendTextMessage('1357968537622144',messageText);
-    res.sendStatus(200);
+    sendTextMessage('1842566562733412',messageText);
+ 
+	res.sendStatus(200);
 })
 
 
